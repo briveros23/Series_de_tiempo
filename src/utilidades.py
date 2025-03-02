@@ -4,18 +4,25 @@ import pandas as pd
 import scipy.stats as stats
 
 
-def plot_time_series(data, start_year, freq):
+def plot_time_series(data, start_year, freq, title='Gráfico de Serie de Tiempo'):
     """
     Grafica una serie de tiempo.
     
     Parámetros:
     - data: pd.Series -> Serie de datos.
     - start_year: int -> Año de inicio.
-    - freq: str -> Frecuencia de la serie ('M', 'Q', 'A', etc.).
+    - freq: str -> Frecuencia de la serie ('M', 'Q', 'A', 'W', etc.).
     """
     
+    # Determinar el primer día en función de la frecuencia
+    start_date = f'{start_year}-01-01'
+    
+    # Ajustar la fecha inicial para frecuencia semanal
+    if freq == 'W':
+        start_date = pd.to_datetime(start_date) + pd.DateOffset(weeks=0)
+    
     # Crear el índice de tiempo
-    date_range = pd.date_range(start=f'{start_year}-01-01', periods=len(data), freq=freq)
+    date_range = pd.date_range(start=start_date, periods=len(data), freq=freq)
     time_series = pd.Series(data.values, index=date_range)
     
     # Graficar la serie de tiempo
@@ -23,9 +30,10 @@ def plot_time_series(data, start_year, freq):
     plt.plot(time_series, linestyle='-')
     plt.xlabel('Tiempo')
     plt.ylabel('Valor')
-    plt.title('Gráfico de Serie de Tiempo')
+    plt.title(title)
     plt.grid(True)
     plt.show()
+
 
 def plot_cross_correlation(x, y, max_lags=20, alpha=0.05):
     """
