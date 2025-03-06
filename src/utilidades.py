@@ -2,16 +2,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
+from sklearn.ensemble import IsolationForest
 
 
-def plot_time_series(data, start_year, freq, title='Gráfico de Serie de Tiempo'):
+def plot_time_series(data, start_year, freq, detect_outliers=False):
     """
-    Grafica una serie de tiempo.
+    Grafica una serie de tiempo con opción de detección de atípicos mediante Isolation Forest.
     
     Parámetros:
     - data: pd.Series -> Serie de datos.
     - start_year: int -> Año de inicio.
     - freq: str -> Frecuencia de la serie ('M', 'Q', 'A', 'W', etc.).
+    - detect_outliers: bool -> Si es True, resalta los atípicos detectados.
     """
     
     # Determinar el primer día en función de la frecuencia
@@ -25,14 +27,34 @@ def plot_time_series(data, start_year, freq, title='Gráfico de Serie de Tiempo'
     date_range = pd.date_range(start=start_date, periods=len(data), freq=freq)
     time_series = pd.Series(data.values, index=date_range)
     
-    # Graficar la serie de tiempo
     plt.figure(figsize=(10, 5))
-    plt.plot(time_series, linestyle='-')
+    plt.plot(time_series, linestyle='-', label='Serie de tiempo')
+    
+    if detect_outliers:
+        model = IsolationForest(contamination=0.05, random_state=42)
+        outliers = model.fit_predict(data.values.reshape(-1, 1))
+        outlier_mask = outliers == -1
+
+        
+        plt.scatter(date_range[outlier_mask], data[outlier_mask], color='red', label='Atípicos', marker='o')
+    
     plt.xlabel('Tiempo')
     plt.ylabel('Valor')
-    plt.title(title)
+    plt.title('Gráfico de Serie de Tiempo')
+    plt.legend()
     plt.grid(True)
     plt.show()
+    if detect_outliers:
+        return data[outlier_mask]
+
+
+##  funcion para devolver una columna con los atipicos  para insertar en la base de datos 
+def detect_outliers(data):
+    model = IsolationForest(contamination=0.05, random_state=42)
+    outliers = model.fit_predict(data.values.reshape(-1, 1))
+    outlier_mask = outliers == -1
+    return outlier_mask
+
 
 
 def plot_cross_correlation(x, y, max_lags=20, alpha=0.05):
